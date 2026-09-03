@@ -99,11 +99,11 @@ package body Relevance_Vector_Machine is
       Phi : Real_Matrix (1 .. N, 1 .. N + 1);
       Active : array (1 .. N + 1) of Boolean := [others => True];
       
-      Alpha : Real_Vector (1 .. N + 1) := [others => 1.0];
+      Alpha : Real_Vector (1 .. N + 1) := [others => 1.0e-3];
       Beta  : Real := 1.0; 
       
-      Max_Iter : constant Positive := 50;
-      Alpha_Threshold : constant Real := 1.0e7;
+      Max_Iter : constant Positive := 500;
+      Alpha_Threshold : constant Real := 1.0e6;
    begin
       -- 1. Build initial Design/Kernel Matrix Phi
       for I in 1 .. N loop
@@ -156,7 +156,7 @@ package body Relevance_Vector_Machine is
                   end;
                else
                   -- Classification: IRLS inner loop (MacKay / Tipping)
-                  for IRLS_Iter in 1 .. 5 loop
+                  for IRLS_Iter in 1 .. 10 loop
                      pragma Unreferenced (IRLS_Iter);
                      declare
                         Pred_Z  : constant Real_Vector := Phi_Act * Mu;
@@ -277,7 +277,7 @@ package body Relevance_Vector_Machine is
                      Mu := Beta * (Sigma * (Phi_T * Y));
                   end;
                else
-                  for IRLS_Iter in 1 .. 3 loop
+                  for IRLS_Iter in 1 .. 20 loop
                      pragma Unreferenced (IRLS_Iter);
                      declare
                         Pred_Z  : constant Real_Vector := Phi_Act * Mu;
