@@ -1,5 +1,6 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Relevance_Vector_Machine; use Relevance_Vector_Machine;
+with System.Assertions; use System.Assertions;
 
 procedure Tests is
    Pass_Count : Natural := 0;
@@ -17,16 +18,19 @@ procedure Tests is
    end Check;
 
    Model : RVM_Model;
+   
+   -- Make Real_Matrix and Real_Vector visible
+   use Relevance_Vector_Machine.Real_Arrays;
 
-   -- Datasets
-   X_Reg1D : constant Real_Matrix (1 .. 4, 1 .. 1) := ((1 => -1.0), (1 => 0.0), (1 => 1.0), (1 => 2.0));
-   Y_Reg1D : constant Real_Vector (1 .. 4)         := (-2.0, 0.0, 2.0, 4.0); -- y = 2x
+   -- Datasets using Ada 2022 square bracket aggregate syntax
+   X_Reg1D : constant Real_Matrix (1 .. 4, 1 .. 1) := [[1 => -1.0], [1 => 0.0], [1 => 1.0], [1 => 2.0]];
+   Y_Reg1D : constant Real_Vector (1 .. 4)         := [-2.0, 0.0, 2.0, 4.0]; -- y = 2x
 
-   X_Class : constant Real_Matrix (1 .. 4, 1 .. 2) := ((0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0));
-   Y_Class : constant Real_Vector (1 .. 4)         := (0.0, 0.0, 0.0, 1.0); -- AND logic gate
+   X_Class : constant Real_Matrix (1 .. 4, 1 .. 2) := [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
+   Y_Class : constant Real_Vector (1 .. 4)         := [0.0, 0.0, 0.0, 1.0]; -- AND logic gate
 
-   V_Empty : constant Real_Vector (1 .. 0) := (others => 0.0);
-   M_Empty : constant Real_Matrix (1 .. 0, 1 .. 1) := (others => (others => 0.0));
+   V_Empty : constant Real_Vector (1 .. 0) := [others => 0.0];
+   M_Empty : constant Real_Matrix (1 .. 0, 1 .. 1) := [others => [others => 0.0]];
 
 begin
    Put_Line ("--- Relevance Vector Machine Test Suite ---");
@@ -41,7 +45,7 @@ begin
    Put_Line ("TEST 2 — Exceptions on Predict before Train");
    begin
       declare
-         Val : constant Target_Value := Predict (Model, (1 => 1.0));
+         Val : constant Target_Value := Predict (Model, [1 => 1.0]);
          pragma Unreferenced (Val);
       begin
          Check ("2.1 Predict did not raise exception", False);
@@ -55,7 +59,7 @@ begin
    Put_Line ("TEST 3 — Exceptions on Predict_Prob before Train");
    begin
       declare
-         Prob : constant Probability := Predict_Prob (Model, (1 => 1.0));
+         Prob : constant Probability := Predict_Prob (Model, [1 => 1.0]);
          pragma Unreferenced (Prob);
       begin
          Check ("3.1 Predict_Prob did not raise exception", False);
@@ -71,13 +75,13 @@ begin
       Train (Model, X_Reg1D, Y_Class, Regression); -- Y length is 4, X is 4, this is OK physically
       -- Wait, Precondition is X'Length(1) = Y'Length. Let's force a mismatch.
       declare
-         Y_Bad : constant Real_Vector (1 .. 3) := (1.0, 2.0, 3.0);
+         Y_Bad : constant Real_Vector (1 .. 3) := [1.0, 2.0, 3.0];
       begin
          Train (Model, X_Reg1D, Y_Bad, Regression);
          Check ("4.1 Dimension mismatch allowed", False);
       end;
    exception
-      when Assertion_Error => Check ("4.1 Precondition blocked dimension mismatch", True);
+      when Assert_Failure => Check ("4.1 Precondition blocked dimension mismatch", True);
       when others => Check ("4.1 Unexpected exception", False);
    end;
 
@@ -91,12 +95,12 @@ begin
    -- TEST 6 — Predict Regression (Linear)
    Put_Line ("TEST 6 — Predict Regression Accuracy (y = 2x)");
    declare
-      Val1 : constant Target_Value := Predict (Model, (1 => 0.5));
-      Val2 : constant Target_Value := Predict (Model, (1 => -0.5));
+      Val1 : constant Target_Value := Predict (Model, [1 => 0.5]);
+      Val2 : constant Target_Value := Predict (Model, [1 => -0.5]);
    begin
       Check ("6.1 Interpolation valid (f(0.5) ~ 1.0)", abs (Val1 - 1.0) < 0.1);
       Check ("6.2 Extrapolation valid (f(-0.5) ~ -1.0)", abs (Val2 - (-1.0)) < 0.1);
-      Check ("6.3 Exact fit valid (f(2.0) ~ 4.0)", abs (Predict(Model, (1=>2.0)) - 4.0) < 0.1);
+      Check ("6.3 Exact fit valid (f(2.0) ~ 4.0)", abs (Predict(Model, [1 => 2.0]) - 4.0) < 0.1);
    end;
 
    -- TEST 7 — Sparsity Check (Regression)
@@ -109,13 +113,13 @@ begin
    Put_Line ("TEST 8 — Dimension Mismatch on Predict");
    begin
       declare
-         Val : constant Target_Value := Predict (Model, (1.0, 2.0)); -- expects 1 feature
+         Val : constant Target_Value := Predict (Model, [1.0, 2.0]); -- expects 1 feature
          pragma Unreferenced (Val);
       begin
          Check ("8.1 Predict allowed wrong feature count", False);
       end;
    exception
-      when Assertion_Error => Check ("8.1 Precondition caught wrong feature count", True);
+      when Assert_Failure => Check ("8.1 Precondition caught wrong feature count", True);
       when others => Check ("8.1 Unexpected exception", False);
    end;
 
@@ -129,11 +133,11 @@ begin
    -- TEST 10 — Predict Regression (RBF)
    Put_Line ("TEST 10 — Predict Regression Accuracy (RBF Kernel)");
    declare
-      Val1 : constant Target_Value := Predict (Model, (1 => 1.0));
+      Val1 : constant Target_Value := Predict (Model, [1 => 1.0]);
    begin
       Check ("10.1 Predict handles RBF correctly", abs (Val1 - 2.0) < 0.5);
       Check ("10.2 Bias and weights apply safely", Model.Support_Vectors_Count <= 4);
-      Check ("10.3 Training set points bounded", abs (Predict(Model, (1=>0.0)) - 0.0) < 0.5);
+      Check ("10.3 Training set points bounded", abs (Predict(Model, [1 => 0.0]) - 0.0) < 0.5);
    end;
 
    -- TEST 11 — Train Classification (Linear)
@@ -146,8 +150,8 @@ begin
    -- TEST 12 — Predict_Prob Classification
    Put_Line ("TEST 12 — Predict_Prob Output Ranges");
    declare
-      Prob_Neg : constant Probability := Predict_Prob (Model, (0.0, 0.0));
-      Prob_Pos : constant Probability := Predict_Prob (Model, (1.0, 1.0));
+      Prob_Neg : constant Probability := Predict_Prob (Model, [0.0, 0.0]);
+      Prob_Pos : constant Probability := Predict_Prob (Model, [1.0, 1.0]);
    begin
       Check ("12.1 Negative class probability < 0.5", Prob_Neg < 0.5);
       Check ("12.2 Positive class probability > 0.5", Prob_Pos > 0.5);
@@ -159,8 +163,8 @@ begin
    Train (Model, X_Class, Y_Class, Classification, RBF, Gamma => 1.0);
    Check ("13.1 Non-linear Model trained successfully", Model.Is_Trained_Successfully);
    declare
-      P1 : constant Probability := Predict_Prob (Model, (1.0, 1.0));
-      P0 : constant Probability := Predict_Prob (Model, (0.0, 0.0));
+      P1 : constant Probability := Predict_Prob (Model, [1.0, 1.0]);
+      P0 : constant Probability := Predict_Prob (Model, [0.0, 0.0]);
    begin
       Check ("13.2 RBF Positive class identified", P1 > 0.5);
       Check ("13.3 RBF Negative class identified", P0 < 0.5);
