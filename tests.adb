@@ -29,9 +29,6 @@ procedure Tests is
    X_Class : constant Real_Matrix (1 .. 4, 1 .. 2) := [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
    Y_Class : constant Real_Vector (1 .. 4)         := [0.0, 0.0, 0.0, 1.0]; -- AND logic gate
 
-   V_Empty : constant Real_Vector (1 .. 0) := [others => 0.0];
-   M_Empty : constant Real_Matrix (1 .. 0, 1 .. 1) := [others => [others => 0.0]];
-
 begin
    Put_Line ("--- Relevance Vector Machine Test Suite ---");
 
