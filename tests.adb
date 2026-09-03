@@ -3,9 +3,24 @@ with Relevance_Vector_Machine; use Relevance_Vector_Machine;
 with System.Assertions; use System.Assertions;
 
 procedure Tests is
+   -- 1. Use clauses for visibility
+   use Relevance_Vector_Machine.Real_Arrays;
+
+   -- 2. Variables and Constants
    Pass_Count : Natural := 0;
    Fail_Count : Natural := 0;
 
+   Model : RVM_Model;
+
+   -- Datasets using Ada 2022 square bracket aggregate syntax
+   X_Reg1D : constant Real_Matrix (1 .. 4, 1 .. 1) := [[1 => -1.0], [1 => 0.0], [1 => 1.0], [1 => 2.0]];
+   Y_Reg1D : constant Real_Vector (1 .. 4)         := [-2.0, 0.0, 2.0, 4.0]; -- y = 2x
+
+   -- Balanced, perfectly separable dataset (Class determined by X1 > 0)
+   X_Class : constant Real_Matrix (1 .. 4, 1 .. 2) := [[-1.0, -1.0], [-1.0, 1.0], [1.0, -1.0], [1.0, 1.0]];
+   Y_Class : constant Real_Vector (1 .. 4)         := [0.0, 0.0, 1.0, 1.0];
+
+   -- 3. Local Subprograms
    procedure Check (Label : String; OK : Boolean) is
    begin
       if OK then
@@ -16,19 +31,6 @@ procedure Tests is
          Fail_Count := Fail_Count + 1;
       end if;
    end Check;
-
-   Model : RVM_Model;
-   
-   -- Make Real_Matrix and Real_Vector visible
-   use Relevance_Vector_Machine.Real_Arrays;
-
-   -- Datasets using Ada 2022 square bracket aggregate syntax
-   X_Reg1D : constant Real_Matrix (1 .. 4, 1 .. 1) := [[1 => -1.0], [1 => 0.0], [1 => 1.0], [1 => 2.0]];
-   Y_Reg1D : constant Real_Vector (1 .. 4)         := [-2.0, 0.0, 2.0, 4.0]; -- y = 2x
-
-   -- Balanced, perfectly separable dataset (Class determined by X1 > 0)
-   X_Class : constant Real_Matrix (1 .. 4, 1 .. 2) := [[-1.0, -1.0], [-1.0, 1.0], [1.0, -1.0], [1.0, 1.0]];
-   Y_Class : constant Real_Vector (1 .. 4)         := [0.0, 0.0, 1.0, 1.0];
 
 begin
    Put_Line ("--- Relevance Vector Machine Test Suite ---");
