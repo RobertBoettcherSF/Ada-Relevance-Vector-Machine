@@ -72,7 +72,7 @@ package body Relevance_Vector_Machine is
 
    -- Matrix Inverse with Tikhonov regularization for numerical stability
    function Robust_Inverse (M : Real_Matrix) return Real_Matrix is
-      Ident : Real_Matrix (M'Range (1), M'Range (2)) := (others => (others => 0.0));
+      Ident : Real_Matrix (M'Range (1), M'Range (2)) := [others => [others => 0.0]];
       Reg   : constant Real := 1.0e-7;
    begin
       for I in Ident'Range (1) loop
@@ -97,9 +97,9 @@ package body Relevance_Vector_Machine is
       D : constant Positive := X'Length (2);
       
       Phi : Real_Matrix (1 .. N, 1 .. N + 1);
-      Active : array (1 .. N + 1) of Boolean := (others => True);
+      Active : array (1 .. N + 1) of Boolean := [others => True];
       
-      Alpha : Real_Vector (1 .. N + 1) := (others => 1.0);
+      Alpha : Real_Vector (1 .. N + 1) := [others => 1.0];
       Beta  : Real := 1.0; 
       
       Max_Iter : constant Positive := 50;
@@ -115,8 +115,8 @@ package body Relevance_Vector_Machine is
 
       -- 2. EM / Sparse Bayesian Learning Loop
       for Iter in 1 .. Max_Iter loop
+         pragma Unreferenced (Iter);
          declare
-            pragma Unreferenced (Iter);
             M_Act : Natural := 0;
          begin
             for B of Active loop
@@ -130,8 +130,8 @@ package body Relevance_Vector_Machine is
             declare
                Phi_Act : Real_Matrix (1 .. N, 1 .. M_Act);
                Col     : Natural := 1;
-               A_Diag  : Real_Matrix (1 .. M_Act, 1 .. M_Act) := (others => (others => 0.0));
-               Mu      : Real_Vector (1 .. M_Act) := (others => 0.0);
+               A_Diag  : Real_Matrix (1 .. M_Act, 1 .. M_Act) := [others => [others => 0.0]];
+               Mu      : Real_Vector (1 .. M_Act) := [others => 0.0];
                Sigma   : Real_Matrix (1 .. M_Act, 1 .. M_Act);
             begin
                -- Sub-select active columns
@@ -254,8 +254,8 @@ package body Relevance_Vector_Machine is
             declare
                Phi_Act : Real_Matrix (1 .. N, 1 .. M_Act);
                C       : Natural := 1;
-               A_Diag  : Real_Matrix (1 .. M_Act, 1 .. M_Act) := (others => (others => 0.0));
-               Mu      : Real_Vector (1 .. M_Act) := (others => 0.0);
+               A_Diag  : Real_Matrix (1 .. M_Act, 1 .. M_Act) := [others => [others => 0.0]];
+               Mu      : Real_Vector (1 .. M_Act) := [others => 0.0];
                Sigma   : Real_Matrix (1 .. M_Act, 1 .. M_Act);
             begin
                for J in Active'Range loop
